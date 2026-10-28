@@ -1,15 +1,16 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_gusto_suppression.dart';
 
 const _tracerName = 'dartastic_otel_libs_gusto';
 
-Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
+APITracer _tracer() => OTelAPI.tracerProvider().getTracer(_tracerName);
 
 class GustoResult {
+  /// Creates a result.
   const GustoResult({
     this.itemCount,
     this.payrollStatus,
@@ -56,8 +57,13 @@ class GustoResult {
   final int? statusCode;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class GustoCallResult<T> {
+  /// Creates a call result.
   const GustoCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final GustoResult? result;
 }
@@ -90,20 +96,20 @@ Future<T> tracedGusto<T>({
   final span = _tracer().startSpan(
     'gusto $operation',
     kind: SpanKind.client,
-    attributes: OTel.attributesFromMap(m),
+    attributes: OTelAPI.attributesFromMap(m),
   );
   try {
     final r = await invoke();
     if (r.result != null) {
       final extras = <Attribute<Object>>[];
       if (r.result!.itemCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'gusto.item_count',
           r.result!.itemCount!,
         ));
       }
       if (r.result!.payrollStatus != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'gusto.payroll.status',
           r.result!.payrollStatus!,
         ));
@@ -115,49 +121,49 @@ Future<T> tracedGusto<T>({
         }
       }
       if (r.result!.processingType != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'gusto.payroll.processing_type',
           r.result!.processingType!,
         ));
       }
       if (r.result!.payrollId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'gusto.payroll.id',
           r.result!.payrollId!,
         ));
       }
       if (r.result!.employeeCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'gusto.employee_count',
           r.result!.employeeCount!,
         ));
       }
       if (r.result!.contractorCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'gusto.contractor_count',
           r.result!.contractorCount!,
         ));
       }
       if (r.result!.amountTotalCents != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'gusto.amount.total.minor',
           r.result!.amountTotalCents!,
         ));
       }
       if (r.result!.processedAt != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'gusto.processed_at',
           r.result!.processedAt!,
         ));
       }
       if (r.result!.requestId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'gusto.request.id',
           r.result!.requestId!,
         ));
       }
       if (r.result!.statusCode != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'http.response.status_code',
           r.result!.statusCode!,
         ));
@@ -168,13 +174,13 @@ Future<T> tracedGusto<T>({
           );
         }
       }
-      if (extras.isNotEmpty) span.addAttributes(OTel.attributes(extras));
+      if (extras.isNotEmpty) span.addAttributes(OTelAPI.attributes(extras));
     }
     return r.value;
   } catch (e, st) {
-    span.addAttributes(OTel.attributes([
-      OTel.attributeString(
-        ErrorResource.errorType.key,
+    span.addAttributes(OTelAPI.attributes([
+      OTelAPI.attributeString(
+        ErrorAttributes.errorType.key,
         e.runtimeType.toString(),
       ),
     ]));
